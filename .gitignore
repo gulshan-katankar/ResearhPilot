@@ -1,3 +1,17 @@
+# ── ResearchPilot ───────────────────────────────────
+# Virtual environment
+llm_projects/
+
+# Secrets — never commit!
+.env
+
+# FAISS index (re-generated from PDFs)
+vector_store/
+
+# Uploaded PDFs (may be sensitive)
+data/pdfs/
+
+# ── Python ───────────────────────────────────────────
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
