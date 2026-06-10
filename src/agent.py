@@ -2,7 +2,7 @@
 Step 5 — LangChain ReAct Agent
 ================================
 Wires together:
-  - Ollama llama3.1 (the reasoning LLM)
+  - Groq llama-3.1-8b-instant (the reasoning LLM, free API)
   - The 3 tools from tools.py (pdf_search, web_search, wikipedia_search)
   - A ReAct prompt that makes the LLM think step-by-step
 
@@ -16,7 +16,7 @@ Exposes:
 
 import os
 from dotenv import load_dotenv
-from langchain_ollama import ChatOllama
+from langchain_groq import ChatGroq
 from langchain.agents import AgentExecutor, create_react_agent
 from langchain_core.prompts import PromptTemplate
 from langchain_core.messages import HumanMessage, AIMessage
@@ -30,10 +30,7 @@ from src.ingest import (
 from src.rag_chain import get_retriever
 from src.tools import ALL_TOOLS, set_retriever
 
-load_dotenv()
-
-BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-MODEL    = os.getenv("OLLAMA_MODEL", "llama3.1")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 
 # ── ReAct Prompt ─────────────────────────────────────────────────────────────
 # llama3.1 (8B) fails with complex prompts — it writes "Action:" then forgets
@@ -116,15 +113,14 @@ class AgentManager:
         retriever = get_retriever(self.vector_store)
         set_retriever(retriever)
 
-        # 3. Build the LLM
-        # Note: do NOT pass stop=["Observation:"] here — langchain-ollama
-        # already injects stop sequences internally via the ReAct prompt,
-        # and passing it again raises "stop found in both input and default params".
-        llm = ChatOllama(
-            model=MODEL,
-            base_url=BASE_URL,
-            temperature=0,      # most deterministic — best for strict format adherence
-            num_predict=1024,
+        # 3. Build the LLM — read key fresh here so .env is always honoured
+        load_dotenv(override=True)  # override=True ensures .env beats any stale env var
+        groq_api_key = os.getenv("GROQ_API_KEY")
+        llm = ChatGroq(
+            model=GROQ_MODEL,
+            api_key=groq_api_key,
+            temperature=0,
+            max_tokens=1024,
         )
 
         # 4. Create the ReAct agent
@@ -152,7 +148,7 @@ class AgentManager:
         )
 
         self.is_ready = True
-        return f"Agent ready! Model: {MODEL}"
+        return f"Agent ready! Model: {GROQ_MODEL}"
 
     # ── Query ────────────────────────────────────────────────────────────────
     def run(self, question: str) -> dict:

@@ -4,6 +4,7 @@ llm_projects/
 
 # Secrets — never commit!
 .env
+.streamlit/secrets.toml
 
 # FAISS index (re-generated from PDFs)
 vector_store/

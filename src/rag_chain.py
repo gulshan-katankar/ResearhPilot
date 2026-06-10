@@ -15,7 +15,7 @@ This module exposes:
 import os
 from dotenv import load_dotenv
 
-from langchain_ollama import ChatOllama
+from langchain_groq import ChatGroq
 from langchain_community.vectorstores import FAISS
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
@@ -23,9 +23,8 @@ from langchain_core.prompts import ChatPromptTemplate
 
 load_dotenv()
 
-BASE_URL    = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-MODEL       = os.getenv("OLLAMA_MODEL", "llama3.1")
-TOP_K       = 5   # number of chunks to retrieve per query
+GROQ_MODEL   = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+TOP_K        = 5   # number of chunks to retrieve per query
 
 # ── System prompt ────────────────────────────────────────────────────────────
 # Instructs the LLM to stay grounded in the retrieved context
@@ -49,13 +48,15 @@ RAG_PROMPT = ChatPromptTemplate.from_messages(
 )
 
 
-def get_llm() -> ChatOllama:
-    """Return a ChatOllama LLM instance."""
-    return ChatOllama(
-        model=MODEL,
-        base_url=BASE_URL,
-        temperature=0.1,       # low temp → more factual, less hallucination
-        num_predict=1024,      # max tokens in the response
+def get_llm() -> ChatGroq:
+    """Return a ChatGroq LLM instance (Groq free API)."""
+    load_dotenv(override=True)   # ensure .env always wins
+    groq_api_key = os.getenv("GROQ_API_KEY")
+    return ChatGroq(
+        model=GROQ_MODEL,
+        api_key=groq_api_key,
+        temperature=0.1,
+        max_tokens=1024,
     )
 
 

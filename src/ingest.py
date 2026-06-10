@@ -15,16 +15,16 @@ from dotenv import load_dotenv
 
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_ollama import OllamaEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 
-# ── Load env vars ───────────────────────────────────────────────────────────
+# ── Load env vars ───────────────────────────────────────────────
 load_dotenv()
 
-BASE_URL        = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-EMBED_MODEL     = os.getenv("OLLAMA_EMBED_MODEL", "nomic-embed-text") #gets the model for embedding in our case it is nomic-embed-text
-PDF_DIR         = Path("data/pdfs")
-VECTOR_STORE_DIR = Path("vector_store")
+# Free embedding model — runs locally/in-container, no API key needed
+EMBED_MODEL_NAME  = "sentence-transformers/all-MiniLM-L6-v2"
+PDF_DIR           = Path("data/pdfs")
+VECTOR_STORE_DIR  = Path("vector_store")
 
 # ── Chunking config ─────────────────────────────────────────────────────────
 CHUNK_SIZE    = 800   # characters per chunk
@@ -67,11 +67,8 @@ def split_documents(docs: list) -> list:
 
 def build_vector_store(chunks: list) -> FAISS:
     """Embed chunks and build a FAISS vector store."""
-    print(f"🔢 Embedding with '{EMBED_MODEL}' via Ollama ({BASE_URL}) ...")
-    embeddings = OllamaEmbeddings(
-        model=EMBED_MODEL,
-        base_url=BASE_URL,
-    )
+    print(f"🔢 Embedding with '{EMBED_MODEL_NAME}' (HuggingFace) ...")
+    embeddings = HuggingFaceEmbeddings(model_name=EMBED_MODEL_NAME)
     vector_store = FAISS.from_documents(chunks, embeddings)
     print("   → Embeddings complete.\n")
     return vector_store
@@ -86,7 +83,7 @@ def save_vector_store(vector_store: FAISS, path: Path = VECTOR_STORE_DIR) -> Non
 
 def load_vector_store(path: Path = VECTOR_STORE_DIR) -> FAISS:
     """Load a previously saved FAISS index from disk."""
-    embeddings = OllamaEmbeddings(model=EMBED_MODEL, base_url=BASE_URL)
+    embeddings = HuggingFaceEmbeddings(model_name=EMBED_MODEL_NAME)
     vector_store = FAISS.load_local(
         str(path),
         embeddings,

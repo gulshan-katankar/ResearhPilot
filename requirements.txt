@@ -1,7 +1,14 @@
 # Core LangChain
 langchain==0.3.25
 langchain-community==0.3.24
-langchain-ollama==0.3.3
+langchain-core>=0.3.58,<1.0.0
+
+# LLM — Groq free API (replaces Ollama for cloud deployment)
+langchain-groq==0.2.4
+
+# Embeddings — HuggingFace sentence-transformers (free, no API key, runs in-container)
+langchain-huggingface==0.1.2
+sentence-transformers>=2.2.0
 
 # Vector store
 faiss-cpu==1.10.0
