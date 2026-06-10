@@ -21,7 +21,7 @@ ollama pull nomic-embed-text
 # 3. Drop your PDFs into data/pdfs/
 
 # 4. Run the app
-streamlit run app.py
+https://researchpilot9827.streamlit.app/
 ```
 
 ## Project Structure
