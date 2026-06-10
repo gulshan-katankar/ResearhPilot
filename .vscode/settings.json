@@ -1,0 +1,9 @@
+{
+    "python.defaultInterpreterPath": "${workspaceFolder}/llm_projects/Scripts/python.exe",
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}"
+    ],
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.autopep8"
+    }
+}

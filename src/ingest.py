@@ -22,7 +22,7 @@ from langchain_community.vectorstores import FAISS
 load_dotenv()
 
 BASE_URL        = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-EMBED_MODEL     = os.getenv("OLLAMA_EMBED_MODEL", "nomic-embed-text")
+EMBED_MODEL     = os.getenv("OLLAMA_EMBED_MODEL", "nomic-embed-text") #gets the model for embedding in our case it is nomic-embed-text
 PDF_DIR         = Path("data/pdfs")
 VECTOR_STORE_DIR = Path("vector_store")
 
@@ -46,7 +46,7 @@ def load_pdfs(pdf_dir: Path) -> list:
     for pdf_path in pdf_files:
         print(f"   • {pdf_path.name}")
         loader = PyPDFLoader(str(pdf_path))
-        docs.extend(loader.load())
+        docs.extend(loader.load()) #reads all pages and each page becomes a langchain doc
 
     print(f"   → Loaded {len(docs)} page(s) total.\n")
     return docs
