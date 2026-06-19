@@ -23,7 +23,7 @@ from supabase.client import Client, create_client
 load_dotenv()
 
 # Gemini Embeddings API (Requires GEMINI_API_KEY)
-EMBED_MODEL_NAME  = "models/embedding-001"
+EMBED_MODEL_NAME  = "models/gemini-embedding-2"
 PDF_DIR           = Path("data/pdfs")
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL")

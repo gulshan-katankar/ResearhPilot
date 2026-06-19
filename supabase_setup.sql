@@ -6,12 +6,12 @@ create table if not exists documents (
   id uuid primary key default gen_random_uuid(),
   content text,
   metadata jsonb,
-  embedding vector(768) -- Gemini text-embedding-004 uses 768 dimensions
+  embedding vector(3072) -- Gemini gemini-embedding-2 uses 3072 dimensions
 );
 
 -- 3. Create the match_documents function for similarity search
 create or replace function match_documents (
-  query_embedding vector(768),
+  query_embedding vector(3072),
   match_count int DEFAULT null,
   filter jsonb DEFAULT '{}'
 ) returns table (
