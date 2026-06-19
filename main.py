@@ -75,7 +75,7 @@ async def get_sources():
     if not pdf_dir.exists():
         return {"sources": []}
         
-    files = [f.name for f in pdf_dir.glob("*.pdf")]
+    files = [f.name for f in pdf_dir.glob("*") if f.suffix.lower() == ".pdf"]
     return {"sources": [{"name": f} for f in files]}
 
 @app.delete("/api/sources/{filename}")
@@ -87,7 +87,8 @@ async def delete_source(filename: str):
         file_path.unlink()
         
         # Check if there are any PDFs left before re-indexing
-        if list(pdf_dir.glob("*.pdf")):
+        remaining_pdfs = [p for p in pdf_dir.glob("*") if p.suffix.lower() == ".pdf"]
+        if remaining_pdfs:
             manager.initialize(force_reindex=True)
         else:
             # No files left. Clear the vector store from memory.

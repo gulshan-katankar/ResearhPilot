@@ -42,7 +42,7 @@ CHUNK_OVERLAP = 200   # overlap to preserve context across chunk boundaries
 def load_pdfs(pdf_dir: Path) -> list:
     """Walk a directory and load every PDF found."""
     docs = []
-    pdf_files = list(pdf_dir.glob("**/*.pdf"))
+    pdf_files = [p for p in pdf_dir.glob("**/*") if p.suffix.lower() == ".pdf"]
 
     if not pdf_files:
         raise FileNotFoundError(
