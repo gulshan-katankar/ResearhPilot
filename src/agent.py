@@ -21,7 +21,6 @@ from src.ingest import (
     ingest,
     load_vector_store,
     vector_store_exists,
-    VECTOR_STORE_DIR,
 )
 from src.rag_chain import get_retriever
 from src.tools import ALL_TOOLS, set_retriever
