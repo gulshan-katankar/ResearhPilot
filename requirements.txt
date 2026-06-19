@@ -10,7 +10,7 @@ langchain-google-genai>=1.0.8
 # langchain-google-genai already included above
 
 # Vector store — Supabase pgvector
-supabase>=2.3.0
+supabase==2.3.4
 
 # PDF parsing
 pypdf==5.5.0
