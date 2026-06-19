@@ -12,10 +12,10 @@ The agent decides which tool to use based on the question.
 """
 
 import os
-import textwrap
+import textwrap #used to shorten long web search results
 from dotenv import load_dotenv
 
-from langchain_core.tools import tool
+from langchain_core.tools import tool #converts the normal python function into a langchain tool
 from langchain_community.vectorstores import FAISS
 
 load_dotenv()
@@ -62,14 +62,13 @@ def pdf_search(query: str) -> str:
         source  = os.path.basename(meta.get("source", "unknown"))
         page    = meta.get("page", "?")
         content = doc.page_content.strip()
-        # Truncate very long chunks for readability
-        if len(content) > 600:
-            content = content[:600] + "…"
         results.append(
-            f"[Excerpt {i}] Source: {source}, Page {page}\n{content}"
+            f"[Source: {source}, Page {page}]\n"
+            f"Content: {content}\n"
+            f"---"
         )
 
-    return "\n\n---\n\n".join(results)
+    return "\n\n".join(results)
 
 
 # ────────────────────────────────────────────────────────────────────────────

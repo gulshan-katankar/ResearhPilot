@@ -3,13 +3,13 @@ import os
 
 load_dotenv(override=True)
 
-from langchain_groq import ChatGroq
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 # Test 1: pass via api_key param
 try:
-    llm = ChatGroq(
-        model="llama-3.1-8b-instant",
-        api_key=os.getenv("GROQ_API_KEY"),
+    llm = ChatGoogleGenerativeAI(
+        model="gemini-2.5-flash",
+        api_key=os.getenv("GEMINI_API_KEY"),
         temperature=0,
         max_tokens=10,
     )
@@ -20,8 +20,8 @@ except Exception as e:
 
 # Test 2: rely on env var only (no explicit key)
 try:
-    llm2 = ChatGroq(
-        model="llama-3.1-8b-instant",
+    llm2 = ChatGoogleGenerativeAI(
+        model="gemini-2.5-flash",
         temperature=0,
         max_tokens=10,
     )

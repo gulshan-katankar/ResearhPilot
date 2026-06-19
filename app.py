@@ -835,8 +835,8 @@ with st.sidebar:
     <div class="sb-section">
         <div class="sb-label">Model</div>
         <div class="file-card">
-            <span class="file-icon">🦙</span>
-            <span class="file-name">llama3.1 · Ollama · Local</span>
+            <span class="file-icon">⚡</span>
+            <span class="file-name">gemini-2.5-flash · Google Gemini</span>
         </div>
     </div>""", unsafe_allow_html=True)
 
@@ -852,7 +852,7 @@ with st.sidebar:
 
 # ── MAIN ─────────────────────────────────────────────────────────────────────
 # Header
-model_label = "llama3.1 · Ollama"
+model_label = "gemini-2.5-flash · Google Gemini"
 st.markdown(f"""
 <div class="main-header">
     <div class="header-inner">
@@ -862,7 +862,7 @@ st.markdown(f"""
                 Ask questions across your research PDFs · powered by local AI · no data leaves your machine
             </p>
         </div>
-        <div class="header-badge">🦙 {model_label}</div>
+        <div class="header-badge">⚡ {model_label}</div>
     </div>
 </div>""", unsafe_allow_html=True)
 

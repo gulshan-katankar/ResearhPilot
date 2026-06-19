@@ -3,15 +3,14 @@ langchain==0.3.25
 langchain-community==0.3.24
 langchain-core>=0.3.58,<1.0.0
 
-# LLM — Groq free API (replaces Ollama for cloud deployment)
-langchain-groq==0.2.4
+# LLM — Google Gemini API
+langchain-google-genai>=1.0.8
 
-# Embeddings — HuggingFace sentence-transformers (free, no API key, runs in-container)
-langchain-huggingface==0.1.2
-sentence-transformers>=2.2.0
+# Embeddings — Google Gemini
+# langchain-google-genai already included above
 
-# Vector store — use latest faiss-cpu compatible with Python 3.12
-faiss-cpu>=1.7.4
+# Vector store — Supabase pgvector
+supabase>=2.3.0
 
 # PDF parsing
 pypdf==5.5.0
@@ -27,3 +26,8 @@ streamlit==1.45.1
 
 # Utilities
 python-dotenv==1.1.0
+
+# API Server (FastAPI)
+fastapi>=0.109.0
+uvicorn>=0.27.0
+python-multipart>=0.0.9

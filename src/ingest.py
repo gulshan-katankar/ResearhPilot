@@ -15,20 +15,28 @@ from dotenv import load_dotenv
 
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_community.vectorstores import FAISS
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_community.vectorstores import SupabaseVectorStore
+from supabase.client import Client, create_client
 
 # ── Load env vars ───────────────────────────────────────────────
 load_dotenv()
 
-# Free embedding model — runs locally/in-container, no API key needed
-EMBED_MODEL_NAME  = "sentence-transformers/all-MiniLM-L6-v2"
+# Gemini Embeddings API (Requires GEMINI_API_KEY)
+EMBED_MODEL_NAME  = "models/text-embedding-004"
 PDF_DIR           = Path("data/pdfs")
-VECTOR_STORE_DIR  = Path("vector_store")
+
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+
+def get_supabase_client() -> Client:
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        raise ValueError("SUPABASE_URL or SUPABASE_KEY is missing from environment variables.")
+    return create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # ── Chunking config ─────────────────────────────────────────────────────────
-CHUNK_SIZE    = 800   # characters per chunk
-CHUNK_OVERLAP = 150   # overlap to preserve context across chunk boundaries
+CHUNK_SIZE    = 1200  # characters per chunk
+CHUNK_OVERLAP = 200   # overlap to preserve context across chunk boundaries
 
 
 def load_pdfs(pdf_dir: Path) -> list:
@@ -60,57 +68,88 @@ def split_documents(docs: list) -> list:
         separators=["\n\n", "\n", ". ", " ", ""],
     )
     chunks = splitter.split_documents(docs)
+    
+    # Metadata enrichment
+    for chunk in chunks:
+        source = chunk.metadata.get("source", "")
+        page = chunk.metadata.get("page", "?")
+        # Prepend source context to chunk content for better retrieval
+        chunk.page_content = (
+            f"[From: {os.path.basename(source)}, Page {page}]\n"
+            + chunk.page_content
+        )
+        
     print(f"✂️  Split into {len(chunks)} chunks "
           f"(size={CHUNK_SIZE}, overlap={CHUNK_OVERLAP}).\n")
     return chunks
 
 
-def build_vector_store(chunks: list) -> FAISS:
-    """Embed chunks and build a FAISS vector store."""
-    print(f"🔢 Embedding with '{EMBED_MODEL_NAME}' (HuggingFace) ...")
-    embeddings = HuggingFaceEmbeddings(model_name=EMBED_MODEL_NAME)
-    vector_store = FAISS.from_documents(chunks, embeddings)
-    print("   → Embeddings complete.\n")
-    return vector_store
+def get_embeddings():
+    return GoogleGenerativeAIEmbeddings(model=EMBED_MODEL_NAME)
 
 
-def save_vector_store(vector_store: FAISS, path: Path = VECTOR_STORE_DIR) -> None:
-    """Persist the FAISS index to disk."""
-    path.mkdir(parents=True, exist_ok=True)
-    vector_store.save_local(str(path))
-    print(f"💾 Vector store saved to '{path}/'.\n")
-
-
-def load_vector_store(path: Path = VECTOR_STORE_DIR) -> FAISS:
-    """Load a previously saved FAISS index from disk."""
-    embeddings = HuggingFaceEmbeddings(model_name=EMBED_MODEL_NAME)
-    vector_store = FAISS.load_local(
-        str(path),
+def build_vector_store(chunks: list) -> SupabaseVectorStore:
+    """Embed chunks and upload them to Supabase pgvector."""
+    print(f"🔢 Embedding with '{EMBED_MODEL_NAME}' (Gemini) ...")
+    supabase = get_supabase_client()
+    embeddings = get_embeddings()
+    vector_store = SupabaseVectorStore.from_documents(
+        chunks,
         embeddings,
-        allow_dangerous_deserialization=True,   # safe — files are ours
+        client=supabase,
+        table_name="documents",
+        query_name="match_documents"
     )
-    print(f"📂 Vector store loaded from '{path}/'.\n")
+    print("   → Embeddings and upload complete.\n")
     return vector_store
 
 
-def vector_store_exists(path: Path = VECTOR_STORE_DIR) -> bool:
-    """Return True if a saved FAISS index already exists on disk."""
-    return (path / "index.faiss").exists()
+def load_vector_store() -> SupabaseVectorStore:
+    """Initialize a Supabase Vector Store client for querying."""
+    supabase = get_supabase_client()
+    embeddings = get_embeddings()
+    vector_store = SupabaseVectorStore(
+        client=supabase,
+        embedding=embeddings,
+        table_name="documents",
+        query_name="match_documents"
+    )
+    print(f"📂 Supabase vector store client loaded.\n")
+    return vector_store
 
 
-def ingest(pdf_dir: Path = PDF_DIR) -> FAISS:
+def vector_store_exists() -> bool:
+    """Check if the Supabase documents table has rows."""
+    try:
+        supabase = get_supabase_client()
+        res = supabase.table("documents").select("id").limit(1).execute()
+        return len(res.data) > 0
+    except Exception:
+        return False
+
+
+def ingest(pdf_dir: Path = PDF_DIR) -> SupabaseVectorStore:
     """
-    Full pipeline: load PDFs → split → embed → save → return vector store.
+    Full pipeline: load PDFs → split → embed → upload to Supabase.
     Called by the agent on startup or when the user uploads new PDFs.
     """
     print("=" * 55)
-    print("  ResearchPilot — PDF Ingestion Pipeline")
+    print("  ResearchPilot — PDF Ingestion Pipeline (Supabase)")
     print("=" * 55 + "\n")
 
     docs   = load_pdfs(pdf_dir)
     chunks = split_documents(docs)
-    vs     = build_vector_store(chunks)
-    save_vector_store(vs)
+    
+    # First, clear the existing table if we are re-indexing
+    supabase = get_supabase_client()
+    try:
+        # Supabase doesn't easily support DELETE without conditions that match everything nicely,
+        # so we delete where id is not null (which deletes all rows)
+        supabase.table("documents").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
+    except Exception as e:
+        print(f"Warning: could not clear old documents: {e}")
+
+    vs = build_vector_store(chunks)
 
     print("✅ Ingestion complete! Vector store is ready.\n")
     return vs
