@@ -85,7 +85,10 @@ def split_documents(docs: list) -> list:
 
 
 def get_embeddings():
-    return GoogleGenerativeAIEmbeddings(model=EMBED_MODEL_NAME)
+    return GoogleGenerativeAIEmbeddings(
+        model=EMBED_MODEL_NAME,
+        google_api_key=os.environ.get("GEMINI_API_KEY")
+    )
 
 
 def build_vector_store(chunks: list) -> SupabaseVectorStore:
