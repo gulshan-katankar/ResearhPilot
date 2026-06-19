@@ -25,7 +25,7 @@ from src.ingest import (
 from src.rag_chain import get_retriever
 from src.tools import ALL_TOOLS, set_retriever
 
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 
 AGENT_PROMPT = ChatPromptTemplate.from_messages([
     ("system", """You are ResearchPilot, an expert research assistant that synthesizes
