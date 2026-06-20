@@ -49,26 +49,39 @@ def pdf_search(query: str) -> str:
         )
 
     try:
-        docs = _retriever.invoke(query)
+        # Bypass Langchain's SupabaseVectorStore bug by calling Supabase directly
+        vectorstore = _retriever.vectorstore
+        client = vectorstore._client
+        embeddings = vectorstore._embedding
+        
+        query_embedding = embeddings.embed_query(query)
+        res = client.rpc(
+            "match_documents",
+            {
+                "query_embedding": query_embedding,
+                "match_count": 4,
+                "filter": {}
+            }
+        ).execute()
+        
+        if not res.data:
+            return "No relevant content found in the uploaded documents for this query."
+            
+        results = []
+        for row in res.data:
+            meta    = row.get("metadata", {})
+            source  = os.path.basename(meta.get("source", "unknown"))
+            page    = meta.get("page", "?")
+            content = row.get("content", "").strip()
+            results.append(
+                f"[Source: {source}, Page {page}]\n"
+                f"Content: {content}\n"
+                f"---"
+            )
+
+        return "\n\n".join(results)
     except Exception as e:
         return f"❌ Error searching documents: {e}"
-
-    if not docs:
-        return "No relevant content found in the uploaded documents for this query."
-
-    results = []
-    for i, doc in enumerate(docs, 1):
-        meta    = doc.metadata
-        source  = os.path.basename(meta.get("source", "unknown"))
-        page    = meta.get("page", "?")
-        content = doc.page_content.strip()
-        results.append(
-            f"[Source: {source}, Page {page}]\n"
-            f"Content: {content}\n"
-            f"---"
-        )
-
-    return "\n\n".join(results)
 
 
 # ────────────────────────────────────────────────────────────────────────────
