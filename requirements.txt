@@ -1,6 +1,6 @@
 # Core LangChain
-langchain==0.3.25
-langchain-community==0.3.24
+langchain>=0.3.25
+langchain-community>=0.3.25
 langchain-core>=0.3.58,<1.0.0
 
 # LLM — Google Gemini API
@@ -10,7 +10,7 @@ langchain-google-genai>=1.0.8
 # langchain-google-genai already included above
 
 # Vector store — Supabase pgvector
-supabase==2.3.4
+supabase>=2.10.0
 
 # PDF parsing
 pypdf==5.5.0
